@@ -1,34 +1,25 @@
-# Gradle files
-.gradle/
-build/
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org"></script>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; }
+        button { background: #0088cc; color: white; border: none; padding: 15px; border-radius: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>GigaChat Mini App</h1>
+    <p>Нажми кнопку, чтобы отправить данные боту</p>
+    <button onclick="sendData()">Отправить привет боту</button>
 
-# Local configuration file (sdk path, etc)
-local.properties
+    <script>
+        let tg = window.Telegram.WebApp; // Получаем объект WebApp
+        tg.expand(); // Расширяем на весь экран
 
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.aab
-*.apk
-output-metadata.json
-
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
-
-# Keystore files
-*.jks
-*.keystore
-
-# Google Services (e.g. APIs or Firebase)
-google-services.json
-
-# Android Profiling
-*.hprof
+        function sendData() {
+            tg.sendData("Привет из Mini App!"); // Отправляет данные боту
+            tg.close(); // Закрывает приложение
+        }
+    </script>
+</body>
+</html>

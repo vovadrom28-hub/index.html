@@ -38,9 +38,6 @@ for i in range(600):
 
 # --- ОСНОВНОЙ КОД ИНТЕРФЕЙСА ---
 HTML_TEMPLATE = """
-@app.route('/')
-def home():
-    return HTML_TEMPLATE
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -389,3 +386,10 @@ def home():
 </body>
 </html>
 """
+@app.route('/')
+def home():
+    return HTML_TEMPLATE
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=10000)
+    

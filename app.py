@@ -389,7 +389,31 @@ HTML_TEMPLATE = """
     };
 
     // Твой старый код начинается ниже...
-    let gold = 500; 
+    let gold = 500;     <script>
+        // АВТО-ИСПРАВИТЕЛЬ: запускается раньше всех
+        window.onerror = function(msg, url, line) {
+            console.log("Ошибка поймана: " + msg + " на строке " + line);
+            return true; // Не дает странице «зависнуть» при ошибке
+        };
+
+        // Принудительный запуск интерфейса через 1 секунду после загрузки
+        setTimeout(() => {
+            console.log("Принудительное обновление...");
+            if (typeof updateUI === 'function') {
+                updateUI();
+            } else {
+                // Если функция сломалась, пробуем обновить поля напрямую
+                try {
+                    document.getElementById('ui-gold').innerText = gold || 0;
+                    document.getElementById('ui-gems').innerText = gems || 0;
+                    document.getElementById('ui-nick').innerText = nick || "Player";
+                } catch(e) {}
+            }
+        }, 1000);
+    </script>
+    
+    <script>
+        // Дальше идет твой основной код...
     </script>
 </body>
 </html>

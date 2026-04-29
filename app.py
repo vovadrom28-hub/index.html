@@ -381,7 +381,15 @@ HTML_TEMPLATE = """
                 pTag.style.display = 'inline-block';            } else {
                 pTag.style.display = 'none';
             }
-        }
+        }<script>
+    // Этот код поймает ошибку и покажет её в окне на телефоне
+    window.onerror = function(msg, url, line) {
+        alert("ОШИБКА: " + msg + "\nСтрока: " + line);
+        return false;
+    };
+
+    // Твой старый код начинается ниже...
+    let gold = 500; 
     </script>
 </body>
 </html>

@@ -385,6 +385,3 @@ HTML_TEMPLATE = """
     </script>
 </body>
 </html>
-'''
-
-  

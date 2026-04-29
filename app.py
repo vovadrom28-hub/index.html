@@ -38,6 +38,9 @@ for i in range(600):
 
 # --- ОСНОВНОЙ КОД ИНТЕРФЕЙСА ---
 HTML_TEMPLATE = """
+@app.route('/')
+def home():
+    return HTML_TEMPLATE
 <!DOCTYPE html>
 <html lang="ru">
 <head>

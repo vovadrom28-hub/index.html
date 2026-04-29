@@ -10,7 +10,7 @@ WORDS_2 = ["LORD", "KING", "SOUL", "CORE", "KNIGHT", "GOD", "BEAST", "STORM", "W
 STYLES = ["rainbow", "gradient-neon", "matte-vibrant", "glossy-glass", "fire-burn", "electric-pulse"]
 
 ALL_PREFIXES = []
-for i in range(600):
+for i in range(100):
     w1 = random.choice(WORDS_1)
     w2 = random.choice(WORDS_2)
     st = random.choice(STYLES)
@@ -20,7 +20,7 @@ for i in range(600):
         "id": i,
         "name": f"{w1} {w2}",
         "style": st,
-        "price": random.randint(5000, 80000), 
+        "price": random.randint(500, 10000), 
         "color1": c1,
         "color2": c2
     })

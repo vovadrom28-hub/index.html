@@ -378,5 +378,13 @@ HTML_TEMPLATE = """
                 let p = allPrefixes[activePref];
                 pTag.innerText = p.name; pTag.className = "pref " + p.style;
                 pTag.style.setProperty('--c1', p.color1); pTag.style.setProperty('--c2', p.color2);
-                pTag.style.display = 'inline-block';
+                pTag.style.display = 'inline-block';            } else {
+                pTag.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+'''
+
   

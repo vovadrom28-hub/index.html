@@ -1,19 +1,8 @@
 
 from flask import Flask, render_template_string
 import random
-from flask import Flask, render_template_string # Для создания веб-сервера и отображения HTML
-import random # Для генерации случайных чисел (например, множителя ракеты)
-import telebot # Библиотека для работы с Telegram Bot API
-from threading import Thread # Для запуска бота в отдельном потоке, чтобы он не мешал веб-серверу
-from telebot import types 
 
-TOKEN = '8628554108:AAEVXaX9y0m3DRx9L4dJ1doLk644WRTfGTM' # Это токен твоего Telegram бота. Не меняй его, если не хочешь создавать нового бота.
-WEB_APP_URL = "https://app-ru.onrender.com" # !!!ВАЖНО!!! Сюда нужно вставить ту ссылку, которую тебе даст Render.com после успешного деплоя. Игра будет работать по этой ссылке.
-ADMIN_PASS = "BOSS-777-XYZ" # Это твой секретный код для доступа к админ-панели. Можешь изменить его на любую комбинацию букв и цифр.
-
-bot = telebot.TeleBot(TOKEN) # Создаем объект бота, используя твой токен
-app = Flask(__name__) # Создаем веб-приложение Flask
-
+app = Flask(__name__)
 
 # --- ГЕНЕРАЦИЯ 600 УЛЬТРА-ЯРКИХ ПРЕФИКСОВ ---
 WORDS_1 = ["NEON", "CRYSTAL", "GHOST", "ALPHA", "TITAN", "SOLAR", "VOID", "ZENITH", "AURA", "GALAXY", "ELITE", "DRAGON", "PHANTOM", "OMEGA", "VORTEX", "ULTRA", "MYSTIC", "SHADOW"]
@@ -378,50 +367,275 @@ HTML_TEMPLATE = """
                 let p = allPrefixes[activePref];
                 pTag.innerText = p.name; pTag.className = "pref " + p.style;
                 pTag.style.setProperty('--c1', p.color1); pTag.style.setProperty('--c2', p.color2);
-                pTag.style.display = 'inline-block';            } else {
-                pTag.style.display = 'none';
+                pTag.style.display = 'inline-block';
             }
-        }<script>
-    // Этот код поймает ошибку и покажет её в окне на телефоне
-    window.onerror = function(msg, url, line) {
-        alert("ОШИБКА: " + msg + "\nСтрока: " + line);
-        return false;
-    };
+            document.documentElement.style.setProperty('--primary', uiColor);
+            document.getElementById('bp-bar').style.width = (bpExp % 100) + "%";
+            document.getElementById('bp-lvl').innerText = Math.floor(bpExp/100) + 1;
+        }
 
-    // Твой старый код начинается ниже...
-    let gold = 500;     <script>
-        // АВТО-ИСПРАВИТЕЛЬ: запускается раньше всех
-        window.onerror = function(msg, url, line) {
-            console.log("Ошибка поймана: " + msg + " на строке " + line);
-            return true; // Не дает странице «зависнуть» при ошибке
-        };
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            if(document.getElementById('n-'+id)) document.getElementById('n-'+id).classList.add('active');
+            if(id === 'shop') renderShop();
+            if(id === 'pets') renderPets();
+        }
 
-        // Принудительный запуск интерфейса через 1 секунду после загрузки
-        setTimeout(() => {
-            console.log("Принудительное обновление...");
-            if (typeof updateUI === 'function') {
+        function applyPromo() {
+            let code = document.getElementById('in-promo').value.toUpperCase();
+            if(usedPromos.includes(code)) return notify("Код уже использован!");
+            if(promoData[code]) {
+                let d = promoData[code];
+                gold += d.gold; gems += d.gems;
+                if(d.pet) {
+                    let pKeys = Object.keys(petsData);
+                    let rp = pKeys[Math.floor(Math.random()*pKeys.length)];
+                    if(!pets.includes(rp)) pets.push(rp);
+                }
+                usedPromos.push(code);
+                notify("УСПЕШНО! Бонусы начислены.");
                 updateUI();
-            } else {
-                // Если функция сломалась, пробуем обновить поля напрямую
-                try {
-                    document.getElementById('ui-gold').innerText = gold || 0;
-                    document.getElementById('ui-gems').innerText = gems || 0;
-                    document.getElementById('ui-nick').innerText = nick || "Player";
-                } catch(e) {}
+            } else notify("Неверный код!");
+        }
+
+        // --- CRASH LOGIC ---
+        let crashInterval, crashMult = 1.0, crashRunning = false;
+        function crashStart() {
+            if(crashRunning) {
+                // Cashout
+                let bet = parseInt(document.getElementById('crash-bet').value);
+                let cur = document.getElementById('crash-cur').value;
+                let win = Math.floor(bet * crashMult);
+                if(cur === 'gold') gold += win; else gems += win;
+                notify("ВЫИГРАНО: " + win);
+                resetCrash();
+                return;
             }
-        }, 1000);
-    </script>
-    
-    <script>
-        // Дальше идет твой основной код...
+            let bet = parseInt(document.getElementById('crash-bet').value);
+            let cur = document.getElementById('crash-cur').value;
+            if((cur === 'gold' && gold < bet) || (cur === 'gems' && gems < bet)) return notify("Мало средств!");
+            
+            if(cur === 'gold') gold -= bet; else gems -= bet;
+            crashRunning = true;
+            crashMult = 1.0;
+            document.getElementById('crash-btn').innerText = "ЗАБРАТЬ";
+            document.getElementById('crash-val').style.color = "white";
+            
+            let crashPoint = Math.random() * 5 + 1.1; // Рандомный момент краша
+            
+            crashInterval = setInterval(() => {
+                crashMult += 0.01;
+                document.getElementById('crash-val').innerText = crashMult.toFixed(2) + "x";
+                if(crashMult >= crashPoint) {
+                    clearInterval(crashInterval);
+                    document.getElementById('crash-val').innerText = "CRASHED!";
+                    document.getElementById('crash-val').style.color = "var(--danger)";
+                    setTimeout(resetCrash, 2000);
+                }
+            }, 100);
+            updateUI();
+        }
+        function resetCrash() {
+            clearInterval(crashInterval);
+            crashRunning = false;
+            document.getElementById('crash-btn').innerText = "СТАВКА";
+            document.getElementById('crash-val').innerText = "1.00x";
+            updateUI();
+        }
+
+        // --- TOWER LOGIC ---
+        let towerActive = false, towerFloor = 0, towerBet = 0, towerX = 1.0;
+        function towerStart() {
+            towerBet = parseInt(document.getElementById('t-bet').value);
+            if(gold < towerBet) return notify("Мало золота!");
+            gold -= towerBet;
+            towerActive = true; towerFloor = 0; towerX = 1.0;
+            document.getElementById('t-start-btn').style.display = 'none';
+            document.getElementById('t-cash-btn').style.display = 'block';
+            renderTower();
+            updateUI();
+        }
+        function renderTower() {
+            const grid = document.getElementById('t-grid');
+            grid.innerHTML = '';
+            for(let i=0; i<10; i++) {
+                let row = document.createElement('div');
+                row.className = 'tower-row' + (i === towerFloor ? ' active' : '');
+                row.id = 't-row-' + i;
+                for(let j=0; j<3; j++) {
+                    let cell = document.createElement('div');
+                    cell.className = 't-cell';
+                    cell.innerHTML = '❓';
+                    cell.onclick = () => towerStep(i, j);
+                    row.appendChild(cell);
+                }
+                grid.appendChild(row);
+            }
+        }
+        function towerStep(r, c) {
+            if(!towerActive || r !== towerFloor) return;
+            let trap = Math.floor(Math.random() * 3);
+            let cells = document.getElementById('t-row-'+r).children;
+            if(c === trap) {
+                cells[c].innerHTML = '💥'; cells[c].classList.add('lose');
+                towerActive = false;
+                notify("БАБАХ! Вы проиграли.");
+                setTimeout(() => {
+                    document.getElementById('t-start-btn').style.display = 'block';
+                    document.getElementById('t-cash-btn').style.display = 'none';
+                    grid.innerHTML = '';
+                }, 1500);
+            } else {
+                cells[c].innerHTML = '💎'; cells[c].classList.add('win');
+                towerX *= 1.8;
+                towerFloor++;
+                document.getElementById('t-x').innerText = 'x' + towerX.toFixed(2);
+                if(towerFloor > 9) towerCashout();
+                else renderTower();
+            }
+        }
+        function towerCashout() {
+            if(!towerActive) return;
+            let win = Math.floor(towerBet * towerX);
+            gold += win;
+            notify("ЗАБРАНО: " + win);
+            towerActive = false;
+            document.getElementById('t-start-btn').style.display = 'block';
+            document.getElementById('t-cash-btn').style.display = 'none';
+            updateUI();
+        }
+
+        // --- SLOTS LOGIC ---
+        function slotsSpin() {
+            let bet = parseInt(document.getElementById('s-bet').value);
+            if(gold < bet) return notify("Мало золота!");
+            gold -= bet;
+            const icons = ['🍒', '🍋', '💎', '7️⃣', '🔔'];
+            let r1 = icons[Math.floor(Math.random()*icons.length)];
+            let r2 = icons[Math.floor(Math.random()*icons.length)];
+            let r3 = icons[Math.floor(Math.random()*icons.length)];
+            
+            document.getElementById('s-1').innerText = r1;
+            document.getElementById('s-2').innerText = r2;
+            document.getElementById('s-3').innerText = r3;
+            
+            if(r1 === r2 && r2 === r3) {
+                let mult = r1 === '💎' ? 50 : (r1 === '🍋' ? 10 : 5);
+                let win = bet * mult;
+                gold += win;
+                notify("JACKPOT! " + win);
+            }
+            updateUI();
+        }
+
+        // --- MINES (FIXED) ---
+        let mActive = false, mBet = 0, mX = 1.0, mData = [], mCur = 'gold';
+        function minesStart() {
+            mBet = parseInt(document.getElementById('m-bet').value);
+            mCur = document.getElementById('m-cur').value;
+            let bal = mCur === 'gold' ? gold : gems;
+            if(bal < mBet) return notify("Мало средств!");
+            if(mCur === 'gold') gold -= mBet; else gems -= mBet;
+            
+            mActive = true; mX = 1.0;
+            mData = Array(25).fill('g');
+            for(let i=0; i<4; i++) {
+                let pos = Math.floor(Math.random()*25);
+                mData[pos] = 'b';
+            }
+            
+            const grid = document.getElementById('m-grid'); grid.innerHTML = '';
+            for(let i=0; i<25; i++) {
+                let c = document.createElement('div');
+                c.className = 't-cell';
+                c.onclick = () => {
+                    if(!mActive || c.innerHTML !== '❓') return;
+                    if(mData[i] === 'b') {
+                        c.innerHTML = '💣'; c.style.background = 'red';
+                        mActive = false; notify("МИНА!");
+                    } else {
+                        c.innerHTML = '💎'; c.style.background = 'var(--primary)';
+                        mX *= 1.25;
+                        document.getElementById('m-x').innerText = mX.toFixed(2) + "x";
+                    }
+                };
+                c.innerHTML = '❓';
+                grid.appendChild(c);
+            }
+            updateUI();
+        }
+        function minesCashout() {
+            if(!mActive) return;
+            let win = Math.floor(mBet * mX);
+            if(mCur === 'gold') gold += win; else gems += win;
+            mActive = false; notify("ВЫИГРАНО: " + win);
+            updateUI();
+        }
+
+        function openGame(g) { showPage(g); }
+        function openProfile() { document.getElementById('modal-profile').style.display = 'block'; }
+        function closeProfile() { document.getElementById('modal-profile').style.display = 'none'; }
+        
+        function updateProfile() {
+            nick = document.getElementById('in-nick').value || "Player";
+            avaSeed = document.getElementById('in-ava').value || "Boss";
+            uiColor = document.getElementById('in-color').value;
+            updateUI();
+        }
+
+        function renderShop() {
+            const list = document.getElementById('shop-list'); list.innerHTML = '';
+            allPrefixes.slice(0, 50).forEach(p => {
+                list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="pref ${p.style}" style="--c1:${p.color1}; --c2:${p.color2}">${p.name}</span>
+                    <button class="btn-main" style="width:auto; padding:5px 15px;" onclick="buyPref(${p.id}, ${p.price})">${p.price} 💎</button>
+                </div>`;
+            });
+        }
+        function buyPref(id, pr) {
+            if(gems >= pr) { gems -= pr; activePref = id; notify("Куплено!"); updateUI(); }
+            else notify("Мало гемов!");
+        }
+
+        function renderPets() {
+            const list = document.getElementById('pets-list'); list.innerHTML = '<h3>МОИ ПИТОМЦЫ</h3>';
+            pets.forEach(p => {
+                let d = petsData[p];
+                list.innerHTML += `<div class="card" onclick="activePet='${p}'; notify('Активен: ${d.n}')" style="${activePet===p?'border:2px solid var(--primary)':''}">
+                    <span style="font-size:30px;">${d.icon}</span> <b>${d.n}</b><br><small>${d.d}</small>
+                </div>`;
+            });
+        }
+
+        // КАНВАС ФОНА
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        for(let i=0; i<50; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, r: Math.random()*2, dx: Math.random()-0.5, dy: Math.random()-0.5});
+        function drawBg() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = uiColor; ctx.globalAlpha = 0.2;
+            particles.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+                p.x += p.dx; p.y += p.dy;
+                if(p.x < 0 || p.x > canvas.width) p.dx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.dy *= -1;
+            });
+            requestAnimationFrame(drawBg);
+        }
+        drawBg();
+        window.onload = updateUI;
     </script>
 </body>
 </html>
 """
-@app.route('/')
-def home():
-    return HTML_TEMPLATE
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=10000)
-    
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE, ALL_PREFIXES=ALL_PREFIXES)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
